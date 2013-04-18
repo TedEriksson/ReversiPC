@@ -5,11 +5,14 @@ Game game;
 void setup() {
 	W = displayWidth;
 	H = displayHeight;
-	size(W,H);
-	game = new Game(W,H);
+	size(W,H,P3D);
+	game = new Game();
+	ortho(0, width, 0, height); 
+	
 }
 
 void draw() {
+	lights();
 	game.draw();
 }
 

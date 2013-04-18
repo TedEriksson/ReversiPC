@@ -20,11 +20,14 @@ Game game;
 public void setup() {
 	W = displayWidth;
 	H = displayHeight;
-	size(W,H);
-	game = new Game(W,H);
+	size(W,H,P3D);
+	game = new Game();
+	ortho(0, width, 0, height); 
+	
 }
 
 public void draw() {
+	lights();
 	game.draw();
 }
 
@@ -55,6 +58,7 @@ class Board {
 				n++;
 			}
 		}
+
 	}
 
 	public void draw() {
@@ -66,6 +70,11 @@ class Board {
 
 	public void drawBoard() {
 		stroke(0);
+		pushMatrix();
+		translate(posX+cellSize*4, posY+cellSize*4, -cellSize/4);
+		fill(0xff00D000);
+		box(cellSize*8, cellSize*8, cellSize/2);
+		popMatrix();
 		for(int i = 0; i < 9; i++) {
 			line(posX + (cellSize * i), posY, posX + (cellSize * i), posY + (cellSize * 8));
 		}
@@ -100,70 +109,137 @@ class Board {
 		int n = 0;
 		for(int i = 0; i < 8; i++) {
 			for(int k = 0; k < 8; k++) {
-				cell[n].setState(cells[i][k]);
+				cell[n].setState(cells[k][i]);
 				n++;
 			}
 		}
 	}
 }
 class Cell {
-	int posX, posY, cellSize, state = 0;
+	int posX, posY, cellSize, state = 0, prevState = 0;
+	float rot;
+	boolean turning = false;
 
 	Cell(int posX, int posY, int cellSize) {
 		this.posX = posX;
 		this.posY = posY;
 		this.cellSize = cellSize;
-	}
-
-	public void draw() {
-		ellipseMode(CENTER);
-		switch(state) {
-			case 1:
-				stroke(255);
-				fill(0xff000000);
-				ellipse(posX, posY, (cellSize*0.8f), (cellSize*0.8f));
-				break;
-			case 2:
-				stroke(0);
-				fill(0xffFFFFFF);
-				ellipse(posX, posY, (cellSize*0.8f), (cellSize*0.8f));
-				break;
-		}
-
-		
-	}
-
-	public void setState(int state) {
-		this.state = state;
-	}
-
-	public int getState() {
-		return state;
-	}
-}
-class Game {
-
-	private int W,H;
-	private Board board;
-	private Scores scores;
-	private boolean isPlayer1Turn = true;
-	private int[][] cells = new int[8][8];
-	
-	Game(int W, int H) {
-		this.W = W;
-		this.H = H;	
 		setup();
 	}
 
 	public void setup() {
-		board = new Board(H/20,H/20, H/9);
-		scores = new Scores(9*H/9,H/20,W,H,H/9);
+		
+		
+	}
+	//Black rot = 0
+	//White rot = PI
+	public void drawCell() {
+		noStroke();
+		pushMatrix();
+		translate(posX, posY, cellSize*0.15f);
+		rotateY(rot);
+		translate(0, 0, cellSize*0.05f);
+		fill(40);
+		box(cellSize*0.8f, cellSize*0.8f, cellSize*0.1f);
+		popMatrix();
+		pushMatrix();
+		translate(posX, posY, cellSize*0.15f);
+		rotateY(rot);
+		translate(0, 0, -cellSize*0.05f);
+		fill(255);
+		box(cellSize*0.8f, cellSize*0.8f, cellSize*0.1f);
+		popMatrix();
+	}
+
+	public void draw() {
+		if(turning) {
+			if(state ==2) {
+				if(rot < PI) {
+					rot += 0.15f;
+				} else {
+					rot = PI;
+					turning = false;
+				}
+			}
+			if(state ==1) {
+				if(rot > 0) {
+					rot -= 0.15f;
+				} else {
+					rot = 0;
+					turning = false;
+				}
+			}
+		} else {
+			if(state == 1)
+				rot = 0;
+			if(state == 2)
+				rot = PI;
+		}
+
+		if(state != 0)
+			drawCell();	
+	}
+
+public void didTurn() {
+	if(prevState != 0 && prevState != state)
+		turning = true;
+		prevState = state;
+}
+
+public void setState(int state) {
+	prevState = this.state;
+	this.state = state;
+	didTurn();
+}
+
+public void swapState() {
+	if(state==1) {
+		state = 2;
+	} else if (state == 2) {
+		state = 1;
+	}
+}
+
+public int getState() {
+	return state;
+}
+}
+class Game {
+
+	private Board board;
+	private Scores scores;
+	private boolean isPlayer1Turn = true, gameStart = true;
+	private int[][] cells = new int[8][8];
+	private int startHeight = height*7;
+	
+	Game() {
+		setup();
+	}
+
+	public void setup() {
+		board = new Board(height/20,height/20, height/9);
+		scores = new Scores(9*height/9,height/20,width,height,height/9);
+		//starting positions
+		cells[3][3] = 2;
+		cells[3][4] = 1;
+		cells[4][3] = 1;
+		cells[4][4] = 2;
+		board.updateCells(cells);
 	}
 
 	public void draw() {
 		background(0xff008000);
 		board.draw();
 		scores.drawScores();
+		if(gameStart) {
+			if(startHeight > height/2) {
+				camera(width/2, startHeight, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
+				startHeight -= 50;
+			} else {
+				gameStart = false;
+				camera(width/2, height/2, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
+			}
+		}
 	}
 
 	public void mousePressed() {
@@ -178,14 +254,38 @@ class Game {
 	private void playMove() {
 		boolean moveMade = false;
 		int cell = board.mousePressed(isPlayer1Turn);
-		if(cell != -1 && cells[cell/8][cell%8] == 0) {
-			cells[cell/8][cell%8] = isPlayer1Turn ? 1 : 2;
+		if(cell != -1 && cells[cell%8][cell/8] == 0) {
+			cells[cell%8][cell/8] = isPlayer1Turn ? 1 : 2;
+			moveMade = true;
+		} else {
+			cells[cell%8][cell/8] = isPlayer1Turn ? 1 : 2;
 			moveMade = true;
 		}
 
 		if(moveMade)
 			endTurn();
 	}
+
+	/*int[][] validMove(int cell) {
+		int cellX = cell%8, cellY = cell/8;
+		int[][] tempCells = cells;
+		if(cellX - 1 == (isPlayer1Turn ? 2 : 1)) {
+			int[] tempCell = {cellX-1, cellY};
+			ArrayList queue = new ArrayList();
+			while(tempCells[tempCell[0]][tempCell[1]] == (isPlayer1Turn ? 2 : 1)) {
+				queue.add(tempCell);
+				tempCell[0]--;
+			}
+			if(tempCells[tempCell[0]][tempCell[1]] == (isPlayer1Turn ? 1 : 2))
+				queue.add(tempCell);
+
+			//if(queue.get(0) == 0 && queue.get(queue.length-1) == (isPlayer1Turn ? 1 : 2)) {
+				while(!queue.isEmpty()) {
+					
+				}
+			//}
+		}
+	}*/
 }
 class Scores {
 	private int posX, posY, width, height, cellSize;

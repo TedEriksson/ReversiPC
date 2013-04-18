@@ -18,6 +18,7 @@ class Board {
 				n++;
 			}
 		}
+
 	}
 
 	void draw() {
@@ -29,6 +30,11 @@ class Board {
 
 	void drawBoard() {
 		stroke(0);
+		pushMatrix();
+		translate(posX+cellSize*4, posY+cellSize*4, -cellSize/4);
+		fill(#00D000);
+		box(cellSize*8, cellSize*8, cellSize/2);
+		popMatrix();
 		for(int i = 0; i < 9; i++) {
 			line(posX + (cellSize * i), posY, posX + (cellSize * i), posY + (cellSize * 8));
 		}
@@ -63,7 +69,7 @@ class Board {
 		int n = 0;
 		for(int i = 0; i < 8; i++) {
 			for(int k = 0; k < 8; k++) {
-				cell[n].setState(cells[i][k]);
+				cell[n].setState(cells[k][i]);
 				n++;
 			}
 		}
