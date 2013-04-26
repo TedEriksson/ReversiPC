@@ -5,6 +5,7 @@ import processing.opengl.*;
 
 import java.util.HashMap; 
 import java.util.ArrayList; 
+import java.io.File; 
 import java.io.BufferedReader; 
 import java.io.PrintWriter; 
 import java.io.InputStream; 
@@ -13,30 +14,73 @@ import java.io.IOException;
 
 public class ReversiPC extends PApplet {
 
-int W = 640, H = 480;
+int W = 1280, H = 720;
 
 Game game;
+int gameState = 1;
+Button gameButton, gameAIButton, optionsButton, quitButton;
 
 public void setup() {
-	W = displayWidth;
-	H = displayHeight;
+	//W = displayWidth;
+	//H = displayHeight;
 	size(W,H,P3D);
-	game = new Game();
+	gameState = 1;
 	ortho(0, width, 0, height); 
-	
+	game = new Game(false);
+	gameButton = new Button("Start Game VS another Player", width/2, height/3);
+	gameAIButton = new Button("Start Game VS CPU", width/2, (height/6)*3);
+	optionsButton = new Button("Options", width/2, (height/6)*4);
+	quitButton = new Button("Quit Game",  width/2, (height/6)*5);
 }
 
 public void draw() {
 	lights();
-	game.draw();
+	switch(gameState) {
+		case 1: mainMenu(); break;
+		case 2: if(!game.draw()) gameState = 1; break;
+	}
+}
+
+public void mainMenu() {
+	background(130);
+	pushMatrix();
+	translate(width/2, 0, 0);
+		pushMatrix();
+			translate(0, height/3, 0);
+			gameButton.draw();
+		popMatrix();
+		pushMatrix();
+			translate(0, (height/6)*3, 0);
+			gameAIButton.draw();
+		popMatrix();
+		pushMatrix();
+			translate(0, (height/6)*4, 0);
+			optionsButton.draw();
+		popMatrix();
+		pushMatrix();
+			translate(0, (height/6)*5, 0);
+			quitButton.draw();
+		popMatrix();
+	popMatrix();
 }
 
 public void mousePressed() {
 	game.mousePressed();
+	if(gameState == 1) {
+		if(gameButton.clicked()) {
+			game = new Game(false);
+			gameState = 2;
+		} else if(gameAIButton.clicked()) {
+			game = new Game(true);
+			gameState = 2;
+		} else if(quitButton.clicked()) {
+			exit();
+		}
+	}
 }
 
 public boolean sketchFullScreen() {
-	return true;
+	return false;
 }
 class Board {
 
@@ -54,7 +98,7 @@ class Board {
 		int n = 0;
 		for(int i = 0; i<8; i++) {
 			for(int k = 0; k < 8; k++) {
-				cell[n] = new Cell(posX + (cellSize/2) + (cellSize * i), posY + (cellSize/2) + (cellSize * k), cellSize);
+				cell[n] = new Cell(posX + (cellSize/2) + (cellSize * k), posY + (cellSize/2) + (cellSize * i), cellSize);
 				n++;
 			}
 		}
@@ -69,17 +113,25 @@ class Board {
 	}
 
 	public void drawBoard() {
-		stroke(0);
+		noStroke();
 		pushMatrix();
 		translate(posX+cellSize*4, posY+cellSize*4, -cellSize/4);
 		fill(0xff00D000);
 		box(cellSize*8, cellSize*8, cellSize/2);
 		popMatrix();
 		for(int i = 0; i < 9; i++) {
-			line(posX + (cellSize * i), posY, posX + (cellSize * i), posY + (cellSize * 8));
+			pushMatrix();
+			fill(40);
+			translate(posX + (cellSize*i),(cellSize*9)/2 - cellSize/24,cellSize/24);
+			box(cellSize/24,(cellSize*8) + cellSize/24,cellSize/12);
+			popMatrix();
 		}
 		for(int i = 0; i < 9; i++) {
-			line(posX, posY + (cellSize * i), posX + (cellSize * 8), posY + (cellSize * i));
+			pushMatrix();
+			fill(40);
+			translate(cellSize*4.5f - cellSize/12, posY + (cellSize*i),0);
+			box(cellSize*8 + cellSize/24, cellSize/24, cellSize/12);
+			popMatrix();
 		}
 	}
 
@@ -87,8 +139,8 @@ class Board {
 		int n = 0;
 		for(int i = 0; i<8; i++) {
 			for(int k = 0; k < 8; k++) {
-				if (mouseX > posX + (cellSize * i) && mouseX < posX + cellSize + (cellSize * i) && 
-					mouseY > posY + (cellSize * k) && mouseY < posY + cellSize + (cellSize * k)) {
+				if (mouseX > posX + (cellSize * k) && mouseX < posX + cellSize + (cellSize * k) && 
+					mouseY > posY + (cellSize * i) && mouseY < posY + cellSize + (cellSize * i)) {
 					return n;
 				}
 				n++;
@@ -105,13 +157,54 @@ class Board {
 		return posY;
 	}
 
-	public void updateCells(int[][] cells) {
-		int n = 0;
-		for(int i = 0; i < 8; i++) {
-			for(int k = 0; k < 8; k++) {
-				cell[n].setState(cells[k][i]);
-				n++;
+	public void updateCells(int[] cells) {
+			for(int k = 0; k < 64; k++) {
+				cell[k].setState(cells[k]);
 			}
+	}
+}
+class Button {
+	String message;
+	int fontSize = 32, posX, posY;
+	Button(String message, int posX, int posY) {
+		this.message = message;
+		this.posX = posX;
+		this.posY = posY;
+	}
+
+	public void draw() {
+		pushMatrix();
+		noStroke();
+		textSize(fontSize);
+		fill(230);
+		if(mouseOver())
+			selected();
+		box((fontSize*message.length())/2 + fontSize,fontSize * 1.5f,20);
+			pushMatrix();
+				fill(40);
+				textAlign(CENTER, CENTER);
+				translate(0, 0, 10);
+				text(message, 0,0,1);
+			popMatrix();
+		popMatrix();
+	}
+
+	public boolean clicked() {
+		if(mouseOver()) {
+			return true;
+		}
+		return false;
+	}
+
+	public void selected() {
+			fill(180);
+	}
+
+	public boolean mouseOver() {
+		if(mouseX > posX - ((fontSize*message.length())/4  + fontSize/2) && mouseX < posX + ((fontSize*message.length())/4  + fontSize/2) && mouseY > posY - fontSize * 1 && mouseY < posY + fontSize * 1) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 }
@@ -208,29 +301,64 @@ class Game {
 
 	private Board board;
 	private Scores scores;
-	private boolean isPlayer1Turn = true, gameStart = true;
-	private int[][] cells = new int[8][8];
+	private boolean isPlayer1Turn = true, gameStart = true, prevGoDidFail = false, banPlay = true;
+	private int[] cells = new int[64];
 	private int startHeight = height*7;
+	private boolean singlePlayer = false, endGame = false;
+	Button mainMenu;
+	WaitTimer timer = new WaitTimer() {
+		public void draw() {
+			
+		}
+	};
 	
-	Game() {
+	PopUp endGamePop = new PopUp() {
+		public void show() {
+			super.show();
+			banPlay = true;
+		}
+
+		public void hide() {
+			super.hide();
+			banPlay = false;
+		}
+		public void button1Pressed() {
+			super.button1Pressed();
+			endGame();
+		}
+
+		public void button2Pressed() {
+			super.button2Pressed();
+			hide();
+		}
+	};
+	
+	Game(boolean singlePlayer) {
+		this.singlePlayer = singlePlayer;
 		setup();
 	}
 
 	public void setup() {
+		
+
 		board = new Board(height/20,height/20, height/9);
-		scores = new Scores(9*height/9,height/20,width,height,height/9);
+		scores = new Scores(height,height/20,width,height,height/9);
 		//starting positions
-		cells[3][3] = 2;
-		cells[3][4] = 1;
-		cells[4][3] = 1;
-		cells[4][4] = 2;
-		board.updateCells(cells);
+		cells[27] = 2;
+		cells[28] = 1;
+		cells[35] = 1;
+		cells[36] = 2;
+		endGamePop.setUp("Game Over","Player Won","Main Menu", "Cancel");
+		mainMenu = new Button("Main Menu",(height/9)*10,(height/8)*7);
+		updateStuff();
+		banPlay =false;
 	}
 
-	public void draw() {
+	public boolean draw() {
 		background(0xff008000);
 		board.draw();
 		scores.drawScores();
+		endGamePop.draw();
 		if(gameStart) {
 			if(startHeight > height/2) {
 				camera(width/2, startHeight, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
@@ -240,56 +368,378 @@ class Game {
 				camera(width/2, height/2, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0);
 			}
 		}
+
+		//draw buttons
+		pushMatrix();
+			translate((height/9)*10 , (height/8)*7, 0);
+			mainMenu.draw();
+		popMatrix();
+
+		if(endGame) {
+			return false;
+		}
+		return true;
+	}
+
+	public void endGame() {
+		endGame = true;
+	}
+
+	public void cpuPlay() {
+		Queue queue = new Queue();
+		for(int i = 0; i < 64; i++) {
+			if(validMove(i,2) != null && cells[i] == 0) {
+				queue.add(i);
+			}
+		}
+		int bestMove = -1;
+		int bestMoveValue = 0;
+		while(!queue.isEmpty()) {
+			int move = queue.remove();
+			int[] tempBoard = validMove(move,2);
+			int moveValue = 0;
+			for(int i = 0; i<64; i++) {
+				if(cells[i] != 2 && tempBoard[i] == 2) {
+					moveValue++;
+				}
+			}
+			if(moveValue > bestMoveValue) {
+				bestMove = move;
+				bestMoveValue = moveValue;
+			}
+		}
+		if(bestMove != -1) {
+			int[] tempCells = validMove(bestMove,2);
+			if (tempCells != null) {
+				cells = tempCells;
+			}
+		}
+		endTurn();
 	}
 
 	public void mousePressed() {
+		if(mainMenu.clicked()) {
+			endGame();
+		}
+		endGamePop.mousePressed();
 		playMove();
+	}
+
+	public void updateStuff() {
+		board.updateCells(cells);
+		int scoreP1 = 0, scoreP2 = 0;
+		for(int i = 0; i <64; i++) {
+			if(cells[i] == 1) {
+				scoreP1++;
+			} else if (cells[i] == 2) {
+				scoreP2++;
+			}
+		}
+		scores.setScores(scoreP1,scoreP2);
 	}
 
 	private void endTurn() {
 		isPlayer1Turn = !isPlayer1Turn;
-		board.updateCells(cells);
+		updateStuff();
+		scores.setTurn(isPlayer1Turn);
+		if(checkWinState()) {
+			if(prevGoDidFail) {
+				println("WIN");
+				endGamePop.setMessage((scores.getPlayer1Score() > scores.getPlayer2Score() ? "Player 1 Wins!" : (scores.getPlayer1Score() == scores.getPlayer2Score() ? "It's a Draw!" : "Player 2 Winds!")));
+				endGamePop.show();
+			} else {
+				prevGoDidFail = true;
+				endTurn();
+			}
+		} else {
+			prevGoDidFail = false;
+		}
+		if(!banPlay && !isPlayer1Turn && singlePlayer) {
+			cpuPlay();
+		}
+	}
+
+	private boolean checkWinState() {
+		if(anyValidMoves(isPlayer1Turn?1:2))
+			return false;
+		return true;
+	}
+
+	private boolean emptyCells() {
+		boolean emptyCells = false;
+
+		for (int i = 0; i <64; i++) {
+			if(cells[i] == 0)
+				emptyCells = true;
+		}
+
+		return emptyCells;
+	}
+
+	private boolean anyValidMoves(int playerNum) {
+		boolean movesLeft = false;
+
+		for (int i = 0; i <64; i++) {
+			int[] temp = validMove(i,playerNum);
+			if(temp != null)
+				movesLeft = true;	
+		}
+		return movesLeft;
 	}
 
 	private void playMove() {
 		boolean moveMade = false;
-		int cell = board.mousePressed(isPlayer1Turn);
-		if(cell != -1 && cells[cell%8][cell/8] == 0) {
-			cells[cell%8][cell/8] = isPlayer1Turn ? 1 : 2;
-			moveMade = true;
-		} else {
-			cells[cell%8][cell/8] = isPlayer1Turn ? 1 : 2;
-			moveMade = true;
+		if(!banPlay && !gameStart) {
+			int cell = board.mousePressed(isPlayer1Turn); //Pressed Postition is passed here
+			if(cell != -1 ) {
+				int[] tempCells = validMove(cell, isPlayer1Turn ? 1 : 2);
+				if (tempCells != null) {
+					moveMade = true;
+					cells = tempCells;
+				} else {
+					println("Not Valid Move");
+				}
+			}
 		}
 
 		if(moveMade)
 			endTurn();
 	}
 
-	/*int[][] validMove(int cell) {
-		int cellX = cell%8, cellY = cell/8;
-		int[][] tempCells = cells;
-		if(cellX - 1 == (isPlayer1Turn ? 2 : 1)) {
-			int[] tempCell = {cellX-1, cellY};
-			ArrayList queue = new ArrayList();
-			while(tempCells[tempCell[0]][tempCell[1]] == (isPlayer1Turn ? 2 : 1)) {
-				queue.add(tempCell);
-				tempCell[0]--;
-			}
-			if(tempCells[tempCell[0]][tempCell[1]] == (isPlayer1Turn ? 1 : 2))
-				queue.add(tempCell);
-
-			//if(queue.get(0) == 0 && queue.get(queue.length-1) == (isPlayer1Turn ? 1 : 2)) {
-				while(!queue.isEmpty()) {
-					
-				}
-			//}
+	private int[] validMove(int cell, int playerNum) {
+		boolean moveMade = false;
+		int inverse = (playerNum == 1 ? 2 : 1); 
+		int[] tempCells = new int[64];
+		for(int i = 0; i <64; i++) {
+			tempCells[i] = cells[i];
 		}
-	}*/
+		if(tempCells[cell] == 0) {
+			for (int direction = 1; direction < 9; direction++) {
+				int tempCell = cell;
+				Queue queue = new Queue();
+				while(tempCell != -1) {
+					queue.add(tempCell);
+					tempCell = checkValidMoveDirection(direction,tempCell);
+					if(tempCell != -1 && tempCells[tempCell] == playerNum) {
+						queue.add(tempCell);
+						tempCell = -1;
+					} else if (tempCell != -1 && tempCells[tempCell] == 0) {
+						tempCell = -1;
+					}
+				}
+
+				if(queue.size() > 2 && tempCells[queue.getLast()] == playerNum && tempCells[queue.remove()] == 0) {
+					while (!queue.isEmpty()){
+						tempCells[queue.remove()] = playerNum;
+					}
+					moveMade = true;
+				}
+			}
+		}
+		if(!moveMade) {
+			return null;
+		}
+		tempCells[cell] = playerNum;
+		return tempCells; 
+	}
+
+	private int checkValidMoveDirection(int direction, int position) {
+		switch (direction) {
+			case 1:
+				if (Math.floor((float) position / 8) != 0) {
+					return position - 8;
+				}
+				break;
+			case 2:
+				if (Math.floor((float) position / 8) != 0
+						&& position % 8 != 8 - 1) {
+					return position - 8 + 1;
+				}
+				break;
+			case 3:
+				if (position % 8 != 8 - 1
+
+				) {
+					return position + 1;
+				}
+				break;
+			case 4:
+				if (position % 8 != 8 - 1
+						&& Math.floor((float) position / 8) != 8 - 1) {
+					return position + 8 + 1;
+				}
+				break;
+			case 5:
+				if (Math.floor((float) position / 8) != 8 - 1) {
+					return position + 8;
+				}
+				break;
+			case 6:
+				if (position % 8 != 0
+						&& Math.floor((float) position / 8) != 8 - 1) {
+					return position + 8 - 1;
+				}
+				break;
+			case 7:
+				if (position % 8 != 0) {
+					return position - 1;
+				}
+				break;
+			case 8:
+				if (Math.floor((float) position / 8) != 0
+						&& position % 8 != 0) {
+					return position - 8 - 1;
+				}
+				break;
+		}
+
+		return -1;
+	}
+}
+class MainMenu {
+	
+
+	MainMenu() {
+		
+	}
+
+	public boolean draw() {
+		
+		return true;
+	}
+}
+class PopUp {
+	String title, message, button1, button2;
+	boolean oneButton = true, showPopUp = false, ready = false;
+	Button b1, b2;
+
+	PopUp() {
+		
+	}
+
+	public void setUp(String title, String message, String button1, String button2) {
+		this.title = title;
+		this.message = message;
+		this.button1 = button1;
+		this.button2 = button2;
+		b1  = new Button(button1,width/2 + width/12,height/2 + height/9);
+		if (!button2.equals("")) {
+			b2  = new Button(button2,width/2 - width/12,height/2 + height/9);
+			oneButton = false;
+		}
+		ready = true;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public void show() {
+		showPopUp = true;
+	}
+
+	public void hide() {
+		showPopUp = false;
+	}
+
+	public void button1Pressed() {
+		println("clicked button 1");
+	}
+
+	public void button2Pressed() {
+		println("clicked button 2");
+	}
+
+	public void mousePressed() {
+		if(showPopUp) {
+			if(b1.clicked())
+				button1Pressed();
+			if(!oneButton) {
+				if(b2.clicked())
+					button2Pressed();
+			}
+		}
+	}
+
+	public void draw() {
+		if(showPopUp && ready) {
+			pushMatrix();
+				translate(width/2, height/2, 100);
+				pushMatrix();
+					fill(40);
+					box(width/3,height/3,30);
+					pushMatrix();
+						fill(255);
+						textAlign(CENTER,CENTER);
+						textSize(60);
+						text(title,0,-(height/9),50);
+					popMatrix();
+					pushMatrix();
+						fill(255);
+						textAlign(CENTER,CENTER);
+						textSize(30);
+						text(message,0,0,50);
+					popMatrix();
+				popMatrix();
+
+				pushMatrix();
+					translate((width/12),height/9 , 20);
+					fill(255);
+					b1.draw();
+				popMatrix();
+
+				if(!oneButton) {
+				pushMatrix();
+					translate(-(width/12),height/9 , 20);
+					fill(255);
+					b2.draw();
+				popMatrix();
+				}
+			popMatrix();
+		}
+	}
+}
+class Queue {
+	
+	ArrayList<Integer> queue = new ArrayList();
+
+	Queue() {
+
+	}
+
+	public void add(int pos) {
+		queue.add(pos);
+	}
+
+	public int remove() {
+		return queue.remove(0);
+	}
+
+	public int getStart() {
+		return queue.get(0);
+	}
+
+	public int getLast() {
+		return queue.get(queue.size()-1);
+	}
+
+	public boolean isEmpty() {
+		return queue.isEmpty();
+	}
+
+	public int size() {
+		return queue.size();
+	}
 }
 class Scores {
 	private int posX, posY, width, height, cellSize;
 	Cell player1, player2;
+
+	int player1Score = 2, player2Score = 2;
+
+	String player1Name = "Ted", player2Name = "CPU";
+
+	boolean isPlayer1Turn = true;
 	
 	Scores(int posX, int posY, int width, int height, int cellSize) {
 		this.posX = posX;
@@ -303,12 +753,98 @@ class Scores {
 		player2.setState(2);
 	}
 
+	public int getPlayer1Score() {
+		return player1Score;
+	}
+
+	public int getPlayer2Score() {
+		return player2Score;
+	}
+
+	public void setScores(int score1, int score2) {
+		player1Score = score1;
+		player2Score = score2;
+
+	}
+
+	public void setTurn(boolean p1Turn) {
+		isPlayer1Turn = p1Turn;
+	}
+
 	public void drawScores() {
+		//Draw Player 1 Stuff
+		rectMode(CORNER);
 		rect(posX + cellSize/2, posY + cellSize/5 , (cellSize/2)*5 ,cellSize*0.6f);
 		player1.draw();
 
+		textSize(cellSize/2);
+		fill(255);
+		rectMode(CENTER);
+		pushMatrix();
+		translate(posX + cellSize/2, posY + cellSize /2, cellSize*0.3f);
+		textAlign(CENTER, CENTER);
+		text(Integer.toString(player1Score), 0, 0,cellSize,cellSize);
+		popMatrix();
+
+		textSize(cellSize/4);
+		fill(255);
+		rectMode(CENTER);
+		pushMatrix();
+		translate(posX + cellSize*2, posY + cellSize /2, cellSize/10);
+		textAlign(LEFT, CENTER);
+		text(player1Name, 0, 0,cellSize*2,cellSize);
+		popMatrix();
+
+
+		//Draw Player 2 Stuff
+		rectMode(CORNER);
 		rect(posX + cellSize/2, posY + cellSize + cellSize/5 , (cellSize/2)*5 ,cellSize*0.6f);
 		player2.draw();
+
+		textSize(cellSize/2);
+		fill(40);
+		rectMode(CENTER);
+		pushMatrix();
+		translate(posX + cellSize/2, posY + cellSize /2 + cellSize, cellSize*0.3f);
+		textAlign(CENTER, CENTER);
+		text(Integer.toString(player2Score), 0, 0,cellSize,cellSize);
+		popMatrix();
+
+		textSize(cellSize/4);
+		fill(40);
+		rectMode(CENTER);
+		pushMatrix();
+		translate(posX + cellSize*2, posY + cellSize + cellSize /2, cellSize/10);
+		textAlign(LEFT, CENTER);
+		text(player2Name, 0, 0,cellSize*2,cellSize);
+		popMatrix();
+
+		pushMatrix();
+		translate(posX + cellSize*3, posY + (isPlayer1Turn ? 0 : cellSize) + cellSize /2, cellSize/10);
+		box(50, 50, 50);
+		popMatrix();
+
+	}
+}
+class WaitTimer {
+	int endTime, millsLeft;
+	boolean go = false;
+
+	WaitTimer() {
+	}
+
+	public void start(int endTime) {
+		this.endTime = millis() + endTime;
+	}
+
+	public boolean checkFinished() {
+		if(millis() >= endTime)
+			return true;
+		return false;
+	}
+
+	public void draw() {
+
 	}
 }
   static public void main(String[] passedArgs) {

@@ -14,7 +14,7 @@ class Board {
 		int n = 0;
 		for(int i = 0; i<8; i++) {
 			for(int k = 0; k < 8; k++) {
-				cell[n] = new Cell(posX + (cellSize/2) + (cellSize * i), posY + (cellSize/2) + (cellSize * k), cellSize);
+				cell[n] = new Cell(posX + (cellSize/2) + (cellSize * k), posY + (cellSize/2) + (cellSize * i), cellSize);
 				n++;
 			}
 		}
@@ -29,17 +29,25 @@ class Board {
 	}
 
 	void drawBoard() {
-		stroke(0);
+		noStroke();
 		pushMatrix();
 		translate(posX+cellSize*4, posY+cellSize*4, -cellSize/4);
 		fill(#00D000);
 		box(cellSize*8, cellSize*8, cellSize/2);
 		popMatrix();
 		for(int i = 0; i < 9; i++) {
-			line(posX + (cellSize * i), posY, posX + (cellSize * i), posY + (cellSize * 8));
+			pushMatrix();
+			fill(40);
+			translate(posX + (cellSize*i),(cellSize*9)/2 - cellSize/24,cellSize/24);
+			box(cellSize/24,(cellSize*8) + cellSize/24,cellSize/12);
+			popMatrix();
 		}
 		for(int i = 0; i < 9; i++) {
-			line(posX, posY + (cellSize * i), posX + (cellSize * 8), posY + (cellSize * i));
+			pushMatrix();
+			fill(40);
+			translate(cellSize*4.5 - cellSize/12, posY + (cellSize*i),0);
+			box(cellSize*8 + cellSize/24, cellSize/24, cellSize/12);
+			popMatrix();
 		}
 	}
 
@@ -47,8 +55,8 @@ class Board {
 		int n = 0;
 		for(int i = 0; i<8; i++) {
 			for(int k = 0; k < 8; k++) {
-				if (mouseX > posX + (cellSize * i) && mouseX < posX + cellSize + (cellSize * i) && 
-					mouseY > posY + (cellSize * k) && mouseY < posY + cellSize + (cellSize * k)) {
+				if (mouseX > posX + (cellSize * k) && mouseX < posX + cellSize + (cellSize * k) && 
+					mouseY > posY + (cellSize * i) && mouseY < posY + cellSize + (cellSize * i)) {
 					return n;
 				}
 				n++;
@@ -65,13 +73,9 @@ class Board {
 		return posY;
 	}
 
-	void updateCells(int[][] cells) {
-		int n = 0;
-		for(int i = 0; i < 8; i++) {
-			for(int k = 0; k < 8; k++) {
-				cell[n].setState(cells[k][i]);
-				n++;
+	void updateCells(int[] cells) {
+			for(int k = 0; k < 64; k++) {
+				cell[k].setState(cells[k]);
 			}
-		}
 	}
 }
