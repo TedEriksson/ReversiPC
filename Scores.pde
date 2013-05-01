@@ -1,10 +1,11 @@
 class Scores {
 	private int posX, posY, width, height, cellSize;
+	float rotX,rotY;
 	Cell player1, player2;
 
 	int player1Score = 2, player2Score = 2;
 
-	String player1Name = "Ted", player2Name = "CPU";
+	String player1Name = "Player 1", player2Name = "Player 2";
 
 	boolean isPlayer1Turn = true;
 	
@@ -87,8 +88,16 @@ class Scores {
 		popMatrix();
 
 		pushMatrix();
-		translate(posX + cellSize*3, posY + (isPlayer1Turn ? 0 : cellSize) + cellSize /2, cellSize/10);
-		box(50, 50, 50);
+		rotY += 0.03;
+		rotX += 0.03;
+		if(rotY > 2*PI) {
+			rotY = 0;
+			rotX = 0;
+		}
+		translate(posX + cellSize*2.5, posY + (isPlayer1Turn ? 0 : cellSize) + cellSize /2, cellSize/10);
+		rotateX(rotX);
+		rotateY(rotY);
+		box(25, 25, 25);
 		popMatrix();
 
 	}

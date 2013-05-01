@@ -3,10 +3,10 @@ int W = 1280, H = 720;
 Game game;
 int gameState = 1;
 Button gameButton, gameAIButton, optionsButton, quitButton;
-
+Background bg = new Background();
 void setup() {
-	//W = displayWidth;
-	//H = displayHeight;
+	W = displayWidth;
+	H = displayHeight;
 	size(W,H,P3D);
 	gameState = 1;
 	ortho(0, width, 0, height); 
@@ -19,6 +19,7 @@ void setup() {
 
 void draw() {
 	lights();
+
 	switch(gameState) {
 		case 1: mainMenu(); break;
 		case 2: if(!game.draw()) gameState = 1; break;
@@ -26,7 +27,8 @@ void draw() {
 }
 
 void mainMenu() {
-	background(130);
+	//background(130);
+	bg.draw();
 	pushMatrix();
 	translate(width/2, 0, 0);
 		pushMatrix();
@@ -64,5 +66,5 @@ void mousePressed() {
 }
 
 boolean sketchFullScreen() {
-	return false;
+	return true;
 }

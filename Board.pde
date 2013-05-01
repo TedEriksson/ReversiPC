@@ -29,24 +29,28 @@ class Board {
 	}
 
 	void drawBoard() {
-		noStroke();
+		
 		pushMatrix();
+		noFill();
+		strokeWeight(cellSize/12);
 		translate(posX+cellSize*4, posY+cellSize*4, -cellSize/4);
-		fill(#00D000);
+		//fill(#00D000);
 		box(cellSize*8, cellSize*8, cellSize/2);
 		popMatrix();
-		for(int i = 0; i < 9; i++) {
+
+noStroke();
+		for(int i = 1; i < 8; i++) {
 			pushMatrix();
 			fill(40);
 			translate(posX + (cellSize*i),(cellSize*9)/2 - cellSize/24,cellSize/24);
-			box(cellSize/24,(cellSize*8) + cellSize/24,cellSize/12);
+			box(cellSize/24,(cellSize*8) + cellSize/24,cellSize/6);
 			popMatrix();
 		}
-		for(int i = 0; i < 9; i++) {
+		for(int i = 1; i < 8; i++) {
 			pushMatrix();
 			fill(40);
 			translate(cellSize*4.5 - cellSize/12, posY + (cellSize*i),0);
-			box(cellSize*8 + cellSize/24, cellSize/24, cellSize/12);
+			box(cellSize*8 + cellSize/24, cellSize/24, cellSize/6);
 			popMatrix();
 		}
 	}

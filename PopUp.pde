@@ -19,7 +19,7 @@ class PopUp {
 		}
 		ready = true;
 	}
-
+ 
 	void setMessage(String message) {
 		this.message = message;
 	}

@@ -5,7 +5,6 @@ import processing.opengl.*;
 
 import java.util.HashMap; 
 import java.util.ArrayList; 
-import java.io.File; 
 import java.io.BufferedReader; 
 import java.io.PrintWriter; 
 import java.io.InputStream; 
@@ -19,10 +18,10 @@ int W = 1280, H = 720;
 Game game;
 int gameState = 1;
 Button gameButton, gameAIButton, optionsButton, quitButton;
-
+Background bg = new Background();
 public void setup() {
-	//W = displayWidth;
-	//H = displayHeight;
+	W = displayWidth;
+	H = displayHeight;
 	size(W,H,P3D);
 	gameState = 1;
 	ortho(0, width, 0, height); 
@@ -35,6 +34,7 @@ public void setup() {
 
 public void draw() {
 	lights();
+
 	switch(gameState) {
 		case 1: mainMenu(); break;
 		case 2: if(!game.draw()) gameState = 1; break;
@@ -42,7 +42,8 @@ public void draw() {
 }
 
 public void mainMenu() {
-	background(130);
+	//background(130);
+	bg.draw();
 	pushMatrix();
 	translate(width/2, 0, 0);
 		pushMatrix();
@@ -80,7 +81,58 @@ public void mousePressed() {
 }
 
 public boolean sketchFullScreen() {
-	return false;
+	return true;
+}
+class BCell extends Cell {
+	int cellSize = 10, state = 0;
+	float rot = (random(0.001f, 0.07f)), rotX = (random(0.001f, 0.07f));
+	int posX = PApplet.parseInt(random(1, 3));
+	int posY = PApplet.parseInt(random(1, 3));
+	boolean turning = false;
+
+	BCell(int posX, int posY, int posZ, int cellSize) {
+		super(posX,posY,cellSize);
+		super.posZ = posZ;
+		setup();
+	}
+
+	public void setup() {
+			
+	}
+
+	public void draw() {
+		if(super.posX > width + 200)
+			super.posX = -PApplet.parseInt(random(200));
+		if(super.posY > height + 200)
+			super.posY = -PApplet.parseInt(random(200));
+		drawCell();
+		super.rot+=rot;
+		super.rotX+=rotX;
+		super.posX +=posX;
+		super.posY +=posY;
+	}
+}
+class Background {
+
+	BCell[] bCell = new BCell[40];
+	
+	Background() {
+		for(int i = 0; i <40;i++) {
+			int posX = 1500-PApplet.parseInt(random(3000));
+			
+			int	posY =1500- PApplet.parseInt(random(3000));
+			int posZ = -PApplet.parseInt(random(1000));
+			int cellSize = PApplet.parseInt(random(100) + 10);
+			
+			bCell[i] = new BCell(posX,posY,posZ,cellSize);
+		}
+	}
+
+	public void draw() {
+		background(30);
+		for(int i = 0; i <40;i++)
+			bCell[i].draw();
+	}
 }
 class Board {
 
@@ -113,24 +165,28 @@ class Board {
 	}
 
 	public void drawBoard() {
-		noStroke();
+		
 		pushMatrix();
+		noFill();
+		strokeWeight(cellSize/12);
 		translate(posX+cellSize*4, posY+cellSize*4, -cellSize/4);
-		fill(0xff00D000);
+		//fill(#00D000);
 		box(cellSize*8, cellSize*8, cellSize/2);
 		popMatrix();
-		for(int i = 0; i < 9; i++) {
+
+noStroke();
+		for(int i = 1; i < 8; i++) {
 			pushMatrix();
 			fill(40);
 			translate(posX + (cellSize*i),(cellSize*9)/2 - cellSize/24,cellSize/24);
-			box(cellSize/24,(cellSize*8) + cellSize/24,cellSize/12);
+			box(cellSize/24,(cellSize*8) + cellSize/24,cellSize/6);
 			popMatrix();
 		}
-		for(int i = 0; i < 9; i++) {
+		for(int i = 1; i < 8; i++) {
 			pushMatrix();
 			fill(40);
 			translate(cellSize*4.5f - cellSize/12, posY + (cellSize*i),0);
-			box(cellSize*8 + cellSize/24, cellSize/24, cellSize/12);
+			box(cellSize*8 + cellSize/24, cellSize/24, cellSize/6);
 			popMatrix();
 		}
 	}
@@ -209,8 +265,8 @@ class Button {
 	}
 }
 class Cell {
-	int posX, posY, cellSize, state = 0, prevState = 0;
-	float rot;
+	int posX, posY,posZ, cellSize, state = 0, prevState = 0;
+	float rot,rotX;
 	boolean turning = false;
 
 	Cell(int posX, int posY, int cellSize) {
@@ -229,18 +285,23 @@ class Cell {
 	public void drawCell() {
 		noStroke();
 		pushMatrix();
-		translate(posX, posY, cellSize*0.15f);
-		rotateY(rot);
-		translate(0, 0, cellSize*0.05f);
-		fill(40);
-		box(cellSize*0.8f, cellSize*0.8f, cellSize*0.1f);
+		translate(0, 0, posZ);
+		pushMatrix();
+			translate(posX, posY, cellSize*0.15f);
+			rotateY(rot);
+			rotateX(rotX);
+			translate(0, 0, cellSize*0.05f);
+			fill(40);
+			box(cellSize*0.8f, cellSize*0.8f, cellSize*0.1f);
 		popMatrix();
 		pushMatrix();
-		translate(posX, posY, cellSize*0.15f);
-		rotateY(rot);
-		translate(0, 0, -cellSize*0.05f);
-		fill(255);
-		box(cellSize*0.8f, cellSize*0.8f, cellSize*0.1f);
+			translate(posX, posY, cellSize*0.15f);
+			rotateY(rot);
+			rotateX(rotX);
+			translate(0, 0, -cellSize*0.05f);
+			fill(255);
+			box(cellSize*0.8f, cellSize*0.8f, cellSize*0.1f);
+		popMatrix();
 		popMatrix();
 	}
 
@@ -307,8 +368,9 @@ class Game {
 	private boolean singlePlayer = false, endGame = false;
 	Button mainMenu;
 	WaitTimer timer = new WaitTimer() {
-		public void draw() {
-			
+		public void finished() {
+			super.finished();
+			cpuPlay();
 		}
 	};
 	
@@ -355,7 +417,10 @@ class Game {
 	}
 
 	public boolean draw() {
-		background(0xff008000);
+
+		background(0xff448da1);
+		pointLight(20, 30, 200, 50, 50, 100);
+		timer.draw();
 		board.draw();
 		scores.drawScores();
 		endGamePop.draw();
@@ -445,7 +510,7 @@ class Game {
 		if(checkWinState()) {
 			if(prevGoDidFail) {
 				println("WIN");
-				endGamePop.setMessage((scores.getPlayer1Score() > scores.getPlayer2Score() ? "Player 1 Wins!" : (scores.getPlayer1Score() == scores.getPlayer2Score() ? "It's a Draw!" : "Player 2 Winds!")));
+				endGamePop.setMessage((scores.getPlayer1Score() > scores.getPlayer2Score() ? "Player 1 Wins!" : (scores.getPlayer1Score() == scores.getPlayer2Score() ? "It's a Draw!" : "Player 2 Wins!")));
 				endGamePop.show();
 			} else {
 				prevGoDidFail = true;
@@ -455,7 +520,7 @@ class Game {
 			prevGoDidFail = false;
 		}
 		if(!banPlay && !isPlayer1Turn && singlePlayer) {
-			cpuPlay();
+			timer.start(PApplet.parseInt(random(500, 2000)));
 		}
 	}
 
@@ -489,7 +554,7 @@ class Game {
 
 	private void playMove() {
 		boolean moveMade = false;
-		if(!banPlay && !gameStart) {
+		if(!banPlay && !gameStart && ((singlePlayer && isPlayer1Turn) || !singlePlayer)) {
 			int cell = board.mousePressed(isPlayer1Turn); //Pressed Postition is passed here
 			if(cell != -1 ) {
 				int[] tempCells = validMove(cell, isPlayer1Turn ? 1 : 2);
@@ -733,11 +798,12 @@ class Queue {
 }
 class Scores {
 	private int posX, posY, width, height, cellSize;
+	float rotX,rotY;
 	Cell player1, player2;
 
 	int player1Score = 2, player2Score = 2;
 
-	String player1Name = "Ted", player2Name = "CPU";
+	String player1Name = "Player 1", player2Name = "Player 2";
 
 	boolean isPlayer1Turn = true;
 	
@@ -820,8 +886,16 @@ class Scores {
 		popMatrix();
 
 		pushMatrix();
-		translate(posX + cellSize*3, posY + (isPlayer1Turn ? 0 : cellSize) + cellSize /2, cellSize/10);
-		box(50, 50, 50);
+		rotY += 0.03f;
+		rotX += 0.03f;
+		if(rotY > 2*PI) {
+			rotY = 0;
+			rotX = 0;
+		}
+		translate(posX + cellSize*2.5f, posY + (isPlayer1Turn ? 0 : cellSize) + cellSize /2, cellSize/10);
+		rotateX(rotX);
+		rotateY(rotY);
+		box(25, 25, 25);
 		popMatrix();
 
 	}
@@ -835,16 +909,24 @@ class WaitTimer {
 
 	public void start(int endTime) {
 		this.endTime = millis() + endTime;
+		go = true;
 	}
 
 	public boolean checkFinished() {
-		if(millis() >= endTime)
+		if(millis() >= endTime) {
+			//println("Counting");
 			return true;
+		}
 		return false;
 	}
 
 	public void draw() {
+		if(checkFinished() && go)
+			finished();
+	}
 
+	public void finished() {
+		go=false;
 	}
 }
   static public void main(String[] passedArgs) {

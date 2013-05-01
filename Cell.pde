@@ -1,6 +1,6 @@
 class Cell {
-	int posX, posY, cellSize, state = 0, prevState = 0;
-	float rot;
+	int posX, posY,posZ, cellSize, state = 0, prevState = 0;
+	float rot,rotX;
 	boolean turning = false;
 
 	Cell(int posX, int posY, int cellSize) {
@@ -19,18 +19,23 @@ class Cell {
 	void drawCell() {
 		noStroke();
 		pushMatrix();
-		translate(posX, posY, cellSize*0.15);
-		rotateY(rot);
-		translate(0, 0, cellSize*0.05);
-		fill(40);
-		box(cellSize*0.8, cellSize*0.8, cellSize*0.1);
+		translate(0, 0, posZ);
+		pushMatrix();
+			translate(posX, posY, cellSize*0.15);
+			rotateY(rot);
+			rotateX(rotX);
+			translate(0, 0, cellSize*0.05);
+			fill(40);
+			box(cellSize*0.8, cellSize*0.8, cellSize*0.1);
 		popMatrix();
 		pushMatrix();
-		translate(posX, posY, cellSize*0.15);
-		rotateY(rot);
-		translate(0, 0, -cellSize*0.05);
-		fill(255);
-		box(cellSize*0.8, cellSize*0.8, cellSize*0.1);
+			translate(posX, posY, cellSize*0.15);
+			rotateY(rot);
+			rotateX(rotX);
+			translate(0, 0, -cellSize*0.05);
+			fill(255);
+			box(cellSize*0.8, cellSize*0.8, cellSize*0.1);
+		popMatrix();
 		popMatrix();
 	}
 

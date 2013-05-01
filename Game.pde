@@ -8,8 +8,9 @@ class Game {
 	private boolean singlePlayer = false, endGame = false;
 	Button mainMenu;
 	WaitTimer timer = new WaitTimer() {
-		void draw() {
-
+		void finished() {
+			super.finished();
+			cpuPlay();
 		}
 	};
 	
@@ -56,7 +57,10 @@ class Game {
 	}
 
 	boolean draw() {
-		background(#008000);
+
+		background(#448da1);
+		pointLight(20, 30, 200, 50, 50, 100);
+		timer.draw();
 		board.draw();
 		scores.drawScores();
 		endGamePop.draw();
@@ -156,7 +160,7 @@ class Game {
 			prevGoDidFail = false;
 		}
 		if(!banPlay && !isPlayer1Turn && singlePlayer) {
-			cpuPlay();
+			timer.start(int(random(500, 2000)));
 		}
 	}
 
@@ -190,7 +194,7 @@ class Game {
 
 	private void playMove() {
 		boolean moveMade = false;
-		if(!banPlay && !gameStart) {
+		if(!banPlay && !gameStart && ((singlePlayer && isPlayer1Turn) || !singlePlayer)) {
 			int cell = board.mousePressed(isPlayer1Turn); //Pressed Postition is passed here
 			if(cell != -1 ) {
 				int[] tempCells = validMove(cell, isPlayer1Turn ? 1 : 2);
