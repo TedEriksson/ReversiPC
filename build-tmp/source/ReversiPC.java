@@ -3,8 +3,14 @@ import processing.data.*;
 import processing.event.*; 
 import processing.opengl.*; 
 
+import ddf.minim.*; 
+import ddf.minim.signals.*; 
+import ddf.minim.analysis.*; 
+import ddf.minim.effects.*; 
+
 import java.util.HashMap; 
 import java.util.ArrayList; 
+import java.io.File; 
 import java.io.BufferedReader; 
 import java.io.PrintWriter; 
 import java.io.InputStream; 
@@ -13,32 +19,57 @@ import java.io.IOException;
 
 public class ReversiPC extends PApplet {
 
+
+
+
+
+
+
 int W = 1280, H = 720;
 
 Game game;
 int gameState = 1;
-Button gameButton, gameAIButton, optionsButton, quitButton;
+Button gameButton, gameAIButton, quitButton;
+CheckBox soundCheck;
 Background bg = new Background();
+PFont font;
+Minim minim;
+AudioPlayer player;
+AudioInput input;
+
 public void setup() {
-	W = displayWidth;
-	H = displayHeight;
+	//W = displayWidth;
+	//H = displayHeight;
 	size(W,H,P3D);
+	font = loadFont("Consolas-48.vlw");
+	textFont(font, 32);
+
+	minim = new Minim(this);
+	player = minim.loadFile("data/dreams.mp3");
+	input = minim.getLineIn();
+	player.play();
 	gameState = 1;
 	ortho(0, width, 0, height); 
 	game = new Game(false);
 	gameButton = new Button("Start Game VS another Player", width/2, height/3);
 	gameAIButton = new Button("Start Game VS CPU", width/2, (height/6)*3);
-	optionsButton = new Button("Options", width/2, (height/6)*4);
 	quitButton = new Button("Quit Game",  width/2, (height/6)*5);
+	soundCheck = new CheckBox("Sound On", "Sound Off", width/2, (height/6)*4);
 }
 
 public void draw() {
 	lights();
 
 	switch(gameState) {
-		case 1: mainMenu(); break;
+		case 1: mainMenu(); camera(width/2, height/2, (height/2) / tan(PI/6), width/2, height/2, 0, 0, 1, 0); break;
 		case 2: if(!game.draw()) gameState = 1; break;
 	}
+
+	// fill(255);
+	// pushMatrix();
+	// translate(50, 0, 0);
+	// 	 text(frameRate,20,20);
+ 	// popMatrix();
 }
 
 public void mainMenu() {
@@ -56,7 +87,7 @@ public void mainMenu() {
 		popMatrix();
 		pushMatrix();
 			translate(0, (height/6)*4, 0);
-			optionsButton.draw();
+			soundCheck.draw();
 		popMatrix();
 		pushMatrix();
 			translate(0, (height/6)*5, 0);
@@ -74,14 +105,27 @@ public void mousePressed() {
 		} else if(gameAIButton.clicked()) {
 			game = new Game(true);
 			gameState = 2;
+		} else if(soundCheck.clicked()) {
+			if(soundCheck.isChecked()) {
+				player.mute();
+			} else {
+				player.unmute();
+			}
+			soundCheck.flipTicked();
 		} else if(quitButton.clicked()) {
 			exit();
 		}
 	}
 }
 
+public void stop() {
+	player.close();
+	minim.stop();
+	super.stop();
+}
+
 public boolean sketchFullScreen() {
-	return true;
+	return false;
 }
 class BCell extends Cell {
 	int cellSize = 10, state = 0;
@@ -121,7 +165,7 @@ class Background {
 			int posX = 1500-PApplet.parseInt(random(3000));
 			
 			int	posY =1500- PApplet.parseInt(random(3000));
-			int posZ = -PApplet.parseInt(random(1000));
+			int posZ = -300 - PApplet.parseInt(random(1000));
 			int cellSize = PApplet.parseInt(random(100) + 10);
 			
 			bCell[i] = new BCell(posX,posY,posZ,cellSize);
@@ -235,7 +279,7 @@ class Button {
 		fill(230);
 		if(mouseOver())
 			selected();
-		box((fontSize*message.length())/2 + fontSize,fontSize * 1.5f,20);
+		box(((fontSize + 1)*message.length())/2 + fontSize,fontSize * 1.5f,20);
 			pushMatrix();
 				fill(40);
 				textAlign(CENTER, CENTER);
@@ -263,6 +307,10 @@ class Button {
 			return false;
 		}
 	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	} 
 }
 class Cell {
 	int posX, posY,posZ, cellSize, state = 0, prevState = 0;
@@ -357,6 +405,40 @@ public void swapState() {
 public int getState() {
 	return state;
 }
+}
+class CheckBox extends Button {
+	boolean ticked = true;
+	String onMessage;
+	String offMessage;
+
+	CheckBox(String message, String offMessage, int posX, int posY) {
+		super(message,posX,posY);
+		this.onMessage = message;
+		this.offMessage = offMessage;
+	}
+
+	public boolean isChecked() {
+		if(ticked)
+			return true;
+		return false;
+	}
+
+	public void flipTicked() {
+		if(ticked) {
+			ticked = false;
+			setMessage(offMessage);
+		} else {
+			ticked = true;
+			setMessage(onMessage);
+		}
+	}
+
+	public boolean clicked() {
+		if(mouseOver()) {
+			return true;
+		}
+		return false;
+	}
 }
 class Game {
 
@@ -694,7 +776,7 @@ class PopUp {
 		}
 		ready = true;
 	}
-
+ 
 	public void setMessage(String message) {
 		this.message = message;
 	}

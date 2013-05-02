@@ -14,7 +14,7 @@ class Button {
 		fill(230);
 		if(mouseOver())
 			selected();
-		box((fontSize*message.length())/2 + fontSize,fontSize * 1.5,20);
+		box(((fontSize + 1)*message.length())/2 + fontSize,fontSize * 1.5,20);
 			pushMatrix();
 				fill(40);
 				textAlign(CENTER, CENTER);
@@ -42,4 +42,8 @@ class Button {
 			return false;
 		}
 	}
+
+	void setMessage(String message) {
+		this.message = message;
+	} 
 }

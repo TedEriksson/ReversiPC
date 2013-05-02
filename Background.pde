@@ -7,7 +7,7 @@ class Background {
 			int posX = 1500-int(random(3000));
 			
 			int	posY =1500- int(random(3000));
-			int posZ = -int(random(1000));
+			int posZ = -300 - int(random(1000));
 			int cellSize = int(random(100) + 10);
 			
 			bCell[i] = new BCell(posX,posY,posZ,cellSize);
