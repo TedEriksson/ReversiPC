@@ -10,7 +10,6 @@ import ddf.minim.effects.*;
 
 import java.util.HashMap; 
 import java.util.ArrayList; 
-import java.io.File; 
 import java.io.BufferedReader; 
 import java.io.PrintWriter; 
 import java.io.InputStream; 
@@ -38,14 +37,15 @@ AudioPlayer player;
 AudioInput input;
 
 public void setup() {
-	//W = displayWidth;
-	//H = displayHeight;
+	W = displayWidth;
+	H = displayHeight;
 	size(W,H,P3D);
 	font = loadFont("Consolas-48.vlw");
 	textFont(font, 32);
 
 	minim = new Minim(this);
 	player = minim.loadFile("data/dreams.mp3");
+	println("Royalty Free Music by longzijun");
 	input = minim.getLineIn();
 	player.play();
 	gameState = 1;
@@ -65,6 +65,7 @@ public void draw() {
 		case 2: if(!game.draw()) gameState = 1; break;
 	}
 
+	//Show FPS
 	// fill(255);
 	// pushMatrix();
 	// translate(50, 0, 0);
@@ -492,6 +493,12 @@ class Game {
 		cells[28] = 1;
 		cells[35] = 1;
 		cells[36] = 2;
+		for (int i =0;i<32;i++)
+			cells[i] = 2;
+		for(int i=32;i<57;i++)
+			cells[i] = 1;
+		for (int i=57;i<63;i++)
+			cells[i] = 2;
 		endGamePop.setUp("Game Over","Player Won","Main Menu", "Cancel");
 		mainMenu = new Button("Main Menu",(height/9)*10,(height/8)*7);
 		updateStuff();
@@ -499,6 +506,9 @@ class Game {
 	}
 
 	public boolean draw() {
+		if(endGame) {
+			return false;
+		}
 
 		background(0xff448da1);
 		pointLight(20, 30, 200, 50, 50, 100);
@@ -521,10 +531,7 @@ class Game {
 			translate((height/9)*10 , (height/8)*7, 0);
 			mainMenu.draw();
 		popMatrix();
-
-		if(endGame) {
-			return false;
-		}
+		
 		return true;
 	}
 
@@ -653,6 +660,7 @@ class Game {
 			endTurn();
 	}
 
+	//Returns a board that contains a new move or null if no move could be made
 	private int[] validMove(int cell, int playerNum) {
 		boolean moveMade = false;
 		int inverse = (playerNum == 1 ? 2 : 1); 
@@ -690,6 +698,7 @@ class Game {
 		return tempCells; 
 	}
 
+	//Returns the next cell along the desired direction if it is a valid cell
 	private int checkValidMoveDirection(int direction, int position) {
 		switch (direction) {
 			case 1:
@@ -741,18 +750,6 @@ class Game {
 		}
 
 		return -1;
-	}
-}
-class MainMenu {
-	
-
-	MainMenu() {
-		
-	}
-
-	public boolean draw() {
-		
-		return true;
 	}
 }
 class PopUp {

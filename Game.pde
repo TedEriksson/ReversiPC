@@ -50,6 +50,12 @@ class Game {
 		cells[28] = 1;
 		cells[35] = 1;
 		cells[36] = 2;
+		for (int i =0;i<32;i++)
+			cells[i] = 2;
+		for(int i=32;i<57;i++)
+			cells[i] = 1;
+		for (int i=57;i<63;i++)
+			cells[i] = 2;
 		endGamePop.setUp("Game Over","Player Won","Main Menu", "Cancel");
 		mainMenu = new Button("Main Menu",(height/9)*10,(height/8)*7);
 		updateStuff();
@@ -57,6 +63,9 @@ class Game {
 	}
 
 	boolean draw() {
+		if(endGame) {
+			return false;
+		}
 
 		background(#448da1);
 		pointLight(20, 30, 200, 50, 50, 100);
@@ -79,10 +88,7 @@ class Game {
 			translate((height/9)*10 , (height/8)*7, 0);
 			mainMenu.draw();
 		popMatrix();
-
-		if(endGame) {
-			return false;
-		}
+		
 		return true;
 	}
 
@@ -211,6 +217,7 @@ class Game {
 			endTurn();
 	}
 
+	//Returns a board that contains a new move or null if no move could be made
 	private int[] validMove(int cell, int playerNum) {
 		boolean moveMade = false;
 		int inverse = (playerNum == 1 ? 2 : 1); 
@@ -248,6 +255,7 @@ class Game {
 		return tempCells; 
 	}
 
+	//Returns the next cell along the desired direction if it is a valid cell
 	private int checkValidMoveDirection(int direction, int position) {
 		switch (direction) {
 			case 1:

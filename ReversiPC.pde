@@ -17,14 +17,16 @@ AudioPlayer player;
 AudioInput input;
 
 void setup() {
-	//W = displayWidth;
-	//H = displayHeight;
+	W = displayWidth;
+	H = displayHeight;
 	size(W,H,P3D);
 	font = loadFont("Consolas-48.vlw");
 	textFont(font, 32);
 
 	minim = new Minim(this);
 	player = minim.loadFile("data/dreams.mp3");
+	//Credit to author of music
+	println("Royalty Free Music by longzijun");
 	input = minim.getLineIn();
 	player.play();
 	gameState = 1;
@@ -105,5 +107,5 @@ void stop() {
 }
 
 boolean sketchFullScreen() {
-	return false;
+	return true;
 }
