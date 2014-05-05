@@ -3,7 +3,7 @@ ReversiPC
 
 Reversi for the Graphics and Animation module.
 
-Created in processing using the OPENGL renderer.
+Created in processing using the P3D renderer.
 
 This Reversi implementation features:
 
